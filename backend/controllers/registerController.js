@@ -43,10 +43,15 @@ exports.register= async (req, res) => {
             .replace(/(^-|-$)/g, "");
 
         //  Insert Store (inactive by default)
+        const[storeResult] = await connection.query(
+            `INSERT INTO stores (name, slug, status) 
+             VALUES (?, ?, 'inactive')`,
+            [storeName, slug]
+        );
+
+        const storeId = storeResult.insertId;
         await connection.query(
-            `INSERT INTO stores (name, slug, owner_id, status) 
-             VALUES (?, ?, ?, 'inactive')`,
-            [storeName, slug, userId]
+            `insert into stores_users(user_id, store_id) values(?,?)`,[userId, storeId]
         );
 
         await connection.commit();

@@ -11,56 +11,68 @@ import {
 import { Avatar, Badge, Dropdown, message } from "antd";
 import { useState,useEffect } from "react";
 import axios from "axios";
-import {useNavigate} from "react-router-dom";
+import {useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
 export default function Header() {
   const [pendingCount, setPendingCount] = useState(0);
   const [pendingList, setPendingList] = useState([]);
   const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user"));
-  const isSuperAdmin = user.role === "super_admin";
+  // const user = JSON.parse(localStorage.getItem("user"));
+  const {user, logout} = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
   const navigate = useNavigate();
+ 
     const dropdownItems = isSuperAdmin
     ? [
 
       {
           key: "profile",
-          label: <span className="text-[15px] font-medium text-[#111]">{user.name}</span>,
+          label: <span className="text-[15px] font-medium text-[#111]">{user?.name}</span>,
           icon: <UserOutlined />,
         },
         {
           key: "mail",
-          label: <span className="text-[15px] font-medium text-[#111]">{user.email}</span>,
+          label: <span className="text-[15px] font-medium text-[#111]">{user?.email}</span>,
           icon: <MailOutlined />,
         },
         {
           key: "logout",
           label: <span className="text-[15px] font-medium text-red-600">Logout</span>,
           icon: <LogoutOutlined />,
+          onClick:() => {
+            logout();
+            navigate("/login");
+          }
         },
         
       ]
     : [
         {
           key: "profile",
-          label: <span className="text-[15px] font-medium text-[#111]">Store Name</span>,
+          label: <span className="text-[15px] font-medium text-[#111]">{user?.name}</span>,
           icon: <UserOutlined />,
         },
         {
           key: "mail",
-          label: <span className="text-[15px] font-medium text-[#111]">Store Email</span>,
+          label: <span className="text-[15px] font-medium text-[#111]">{user?.email}</span>,
           icon: <MailOutlined />,
         },
         {
           key: "logout",
           label: <span className="text-[15px] font-medium text-red-600">Logout</span>,
           icon: <LogoutOutlined />,
+          onClick:() => {
+            logout();
+            navigate("/login");
+          }
         },
       ];
       useEffect(() => {
         if (isSuperAdmin) {
           fetchPending();
         }
-      }, []);
+      }, [isSuperAdmin]);
 
       const fetchPending = async () => {
         try {
@@ -113,6 +125,10 @@ export default function Header() {
         label: <span className="text-gray-400">No pending approvals</span>,
       },
     ];
+
+    // if (!user) {
+    // return <Navigate to="/login" />;
+    // }
   return (
     
 
@@ -154,10 +170,12 @@ export default function Header() {
               />
             )}
 
-            <p className="text-white text-lg font-semibold leading-none !m-0">
-              {isSuperAdmin ? user.name : "Admin"}
-              <CaretDownOutlined className="text-white text-sm ml-1" />
+            <p className="text-white text-lg font-semibold leading-none !m-0 !mr-1">
+              {/* {user.name} */}
+              {isSuperAdmin ? user?.name : "Admin"}
+              
             </p>
+            <CaretDownOutlined className="text-white text-sm ml-1" />
           </div>
         </Dropdown>
       </div>

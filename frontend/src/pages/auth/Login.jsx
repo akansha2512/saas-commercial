@@ -3,9 +3,11 @@ import { useNavigate,NavLink  } from "react-router-dom";
 import { Form,Input,Typography,Button,message  } from "antd";
 const {Title ,Text} =Typography
 import home from "../../assets/images/home_4.jpg";
+import {useAuth} from "../../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   return (
   <div className="min-h-screen flex items-center justify-center 
       bg-gradient-to-r from-[#fff2ef] via-[#ffdbb6] via-[#f7a5a5] to-[#1a2a4f]">
@@ -38,6 +40,7 @@ export default function Login() {
 
    
           <Form layout="vertical" className="space-y-5" 
+              
                onFinish={async (values) => {
                   try {
                     const res = await axios.post(
@@ -46,16 +49,41 @@ export default function Login() {
                     );
 
                     // Token store
-                    localStorage.setItem("token", res.data.token);
-                    localStorage.setItem("user", JSON.stringify(res.data.user));
+                     const { token, user, stores } = res.data;
+
+                    // localStorage.setItem("token", res.data.token);
+                    localStorage.setItem("token",token);
+                    console.log(res.data.token);
+
+                    // localStorage.setItem("user", JSON.stringify(res.data.user));
+                    localStorage.setItem("stores", JSON.stringify(stores));
+
+                    // login(res.data.user);
+                    login(user);
 
                     message.success("Login Successful");
-                    if(res.data.user.role === "super_admin"){
-                      navigate("/admin/dashboard")
-                    }else{
-                      navigate("/dashboard")
+
+                    // if(res.data.user.role === "super_admin"){
+                    //   navigate("/admin/dashboard")
+                    // }else{
+                    //   navigate("/dashboard")
+                    // }
+
+                    if(user.role === "super_admin"){
+                      navigate("/admin/dashboard");
+                      return;
                     }
-                    // console.log(res.data);
+
+                    if(stores.length===0){
+                      // navigate("create/store")
+                    }else if(stores.length === 1){
+                        localStorage.setItem("activeStoreId", stores[0].id);
+                        navigate(`/merchant/${stores[0].slug}/dashboard`);
+                    }
+                    else{
+                      // navigate("/select-store");
+                    }
+                    console.log(res.data);
 
                   } catch (err) {
                     message.error(

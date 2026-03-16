@@ -3,13 +3,15 @@ import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { useEffect } from "react";
 import axios from "axios";
 import { useState } from "react";
-
+import { useAuth } from "../../context/AuthContext";
 const { Search } = Input;
 
 export default function PendingApproval() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);  
     const [actionLoading, setActionLoading] = useState(null);
+    // const token = localStorage.getItem("token");
+    const { user } = useAuth();
     const token = localStorage.getItem("token");
     const columns = [
         {
@@ -48,17 +50,17 @@ export default function PendingApproval() {
             dataIndex: "status",
             key: "status",
             render: (status) => {
-                // console.log("STATUS FROM API 👉", status);
+                // console.log("STATUS FROM API ", status);
                 if (status === "inactive") {
-                return <Tag className="text-base font-medium" color="gold">In Active</Tag>;
+                return <Tag className="text-lg font-medium" color="gold">In Active</Tag>;
                 }
                 if (status === "active") {
-                return <Tag className="text-base font-medium" color="green">Approved</Tag>;
+                return <Tag className="text-lg font-medium" color="green">Approved</Tag>;
                 }
                 if (status === "disabled") {
-                return <Tag className="text-base font-medium" color="red">Rejected</Tag>;
+                return <Tag className="text-lg font-medium" color="red">Rejected</Tag>;
                 }
-                return <Tag className="text-base font-medium">Unknown</Tag>;
+                return <Tag className="text-lg font-medium">Unknown</Tag>;
             }
         },
         {
@@ -79,6 +81,7 @@ export default function PendingApproval() {
                     >
                         <Button
                             type="primary"
+                            size="large"
                             icon={<CheckCircleOutlined />}
                             loading={actionLoading === record.key}
                             style={{ fontWeight: 500 }}
@@ -97,6 +100,7 @@ export default function PendingApproval() {
                             danger
                             icon={<CloseCircleOutlined />}
                             loading={actionLoading === record.key}
+                            size="large"
                             style={{ fontWeight: 500 }}
                         >
                             Reject
@@ -203,7 +207,7 @@ export default function PendingApproval() {
                     dataSource={data}
                     loading={loading}
                     pagination={{ pageSize: 5 }}
-                    rowClassName={() => "text-base"}
+                    rowClassName={() => "text-lg"}
                 />
             </div>
         </div>

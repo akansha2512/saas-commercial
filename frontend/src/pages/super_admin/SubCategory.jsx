@@ -1,20 +1,19 @@
-import { Table, Tag, Button, Space, Input, Modal, Form, message, Popconfirm } from "antd";
-import {PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined} from "@ant-design/icons"
+import { Table, Tag, Button, Space, Input, Modal, Form, Switch,message,Popconfirm  } from "antd";
+import {PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, ArrowLeftOutlined } from "@ant-design/icons"
 import { useState } from "react";
-import {useNavigate} from "react-router-dom";
-const {Search, TextArea} = Input;
+import {useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { useEffect } from "react";
-export default function Category(){
+const {Search, TextArea} = Input;
+export default function SubCategory(){
     const[isModalOpen, setIsModalOpen] = useState(false);
     const [form] = Form.useForm();
-    const [editingId, setEditingId] = useState(null);
     const navigate = useNavigate();
-    
-    const [loading, setLoading] = useState(false);
-
-    const token = localStorage.getItem("token");
+     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState([]);
+     const [editingId, setEditingId] = useState(null);
+     const token = localStorage.getItem("token");
+     const { id } = useParams();
     const columns = [
         {
             title:(<span className="text-xl font-semibold text-black uppercase">ID</span>),
@@ -22,7 +21,7 @@ export default function Category(){
             render:(text,record,index)=>index+1,
         },
         {
-            title:(<span className="text-xl font-semibold text-black uppercase">Category</span>),
+            title:(<span className="text-xl font-semibold text-black uppercase">SubCategory</span>),
             dataIndex:"name",
             key:"name",
             render: (text) =>
@@ -35,18 +34,16 @@ export default function Category(){
             
         },
         {
-            title:(<span className="text-xl font-semibold text-black uppercase">Total Subcategory</span>),
-            dataIndex:"total_subcategories",
-            key:"total_subcategories",
-        },
-        {
             title: <span className="text-xl font-semibold text-black uppercase">Status</span>,
             dataIndex: "status",
             key: "status",
-            render: (status) => (
-                <Tag color={status === "Active" ? "red" : "green"} className="text-lg font-medium">
-                {status.toUpperCase()}
-                </Tag>
+            render: (status, record) => (
+                <Switch
+                    checked={status === "active"}
+                    onChange={(checked) => handleStatusToggle(record.key, checked)}
+                    checkedChildren=""
+                    unCheckedChildren=""
+                />
             ),
         },
         {
@@ -59,15 +56,9 @@ export default function Category(){
                 onClick={() => handleEdit(record)}
                 style={{ fontWeight: 500 }}>Edit</Button>
                 
-                <Button type="primary" icon={<EyeOutlined/>}
-                size="large"
-                style={{ fontWeight: 500 }}
-                onClick={() => navigate(`/admin/categories/${record.key}/subcategories`)}
-                >Manage SubCategories</Button>
-                
                 <Popconfirm
                     title="Delete Category"
-                    description="Are you sure you want to delete this category?"
+                    description="Are you sure you want to delete this subcategory?"
                     okText="Yes"
                     cancelText="No"
                     onConfirm={() => handleDelete(record.key)}
@@ -76,31 +67,118 @@ export default function Category(){
                 style={{ fontWeight: 500 }}>
                     Delete
                 </Button></Popconfirm>
-            
                 
                 </Space>
             ),
         },
     ]
     const handleEdit = (record) => {
-        setIsModalOpen(true);       // Open modal
-        setEditingId(record.key);   // Save the id to update
-        form.setFieldsValue({       // Fill existing data in form
-            name: record.name,
-            description: record.description || "",
+       setIsModalOpen(true);
+        setEditingId(record.key);
+        form.setFieldsValue({
+            name:record.name,
+            description:record.description || "",
         });
+        
     };
-    const handleDelete = async (id) => {
+
+    const handleStatusToggle = (key, checked) => {
+        const updatedData = categories.map((item) => {
+            if (item.key === key) {
+                return {
+                    ...item,
+                    status: checked ? "active" : "inactive",
+                };
+            }
+            return item;
+        });
+
+        setCategories(updatedData);
+    };
+    const onFinish = async(values) => {
         try {
             setLoading(true)
-            await axios.delete(`http://localhost:5000/api/category/delete-category/${id}`,{
+            if(editingId){
+                await axios.put(`http://localhost:5000/api/category/${id}/subcategories/${editingId}`,{
+                name: values.name,
+                description: values.description,
+                },
+                {
+                    headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+            );
+             message.success("SubCategory updated successfully");
+            
+            }else{
+                await axios.post(`http://localhost:5000/api/category/${id}/subcategories/save`,{
+                name: values.name,
+                description: values.description,
+            },
+            {
+                headers: {
+                Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+        message.success("SubCategory created successfully");
+        }
+            fetchSubCategory();           
+            setIsModalOpen(false);     
+            setEditingId(null);        
+            form.resetFields(); 
+        } catch (error) {
+            message.error("Sub Category failed");
+        }
+        finally{
+            setLoading(false);
+        }
+    }
+    useEffect(() => {
+        fetchSubCategory();
+    },[]);
+
+    const fetchSubCategory = async() => {
+        setLoading(true);
+        try {
+            const res = await axios.get(`http://localhost:5000/api/category/${id}/subcategories/list`,{
+                headers:{
+                    Authorization:`Bearer ${token}`
+                },
+            }
+        );
+        const data = res.data.data.map((item) => ({
+                key:item.id,
+                name:item.name,
+                slug:item.slug,
+                description:item.description,
+                status:item.status,
+            }));
+            // console.log(res.data.data);
+        setCategories(data)
+        } catch (error) {
+             message.error("failed to fetch");
+        }
+        finally{
+            setLoading(false);
+        }
+    }
+
+    const handleDelete = async(subCategoryId) =>{
+        try {
+            setLoading(true)
+            await axios.delete(`http://localhost:5000/api/category/${id}/subcategories/delete-subcategory/${subCategoryId}`,
+                {
                  headers: {
                     Authorization: `Bearer ${token}`,
                 },
             }
-        );
-        message.success("Category Delete successfully");
-        fetchCategory(); 
+            );
+
+
+            message.success("Category Delete successfully");
+            fetchSubCategory(); 
         } catch (error) {
            message.error("Failed to delete category"); 
         }
@@ -108,94 +186,29 @@ export default function Category(){
             setLoading(false);
         }
     }
-    const onFinish = async (values) => {
-        try {
-            setLoading(true)
-            if(editingId){
-                await axios.put(
-            `http://localhost:5000/api/category/update-category/${editingId}`,
-            {
-                name: values.name,
-                description: values.description,
-            },
-            {
-                headers: {
-                Authorization: `Bearer ${token}`,
-                },
-            }
-            );
-
-            message.success("Category updated successfully");
-            }
-            else{
-            await axios.post(
-            "http://localhost:5000/api/category/store",
-            {
-                name: values.name,
-                description: values.description,
-            },
-            {
-                headers: {
-                Authorization: `Bearer ${token}`,
-                },
-            }
-            );
-
-            message.success("Category created successfully");
-            }
-            fetchCategory();           // Refresh table
-            setIsModalOpen(false);     // Close modal
-            setEditingId(null);        
-            form.resetFields();
-        } catch (error) {
-            message.error("Category failed");
-        }
-        finally{
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchCategory();
-    },[]);
-
-    const fetchCategory = async() => {
-        setLoading(true);
-        try {
-            const res = await axios.get("http://localhost:5000/api/category/list-category",{
-                headers:{
-                    Authorization:`Bearer ${token}`
-                },
-            }
-        );
-        const data = res.data.data.map((item) => ({
-            key:item.id,
-            name:item.name,
-            slug:item.slug,
-            description: item.description,
-            total_subcategories: item.total_subcategories || 0,
-            status:item.status,
-        }));
-        // console.log(res.data.data);
-        setCategories(data)
-        } catch (error) {
-            message.error("failed to fetch");
-        }
-        finally{
-            setLoading(false);
-        }
-    }
-
-    
     return(
         <div className="p-6 bg-gray-100 ">
-            <div  className="bg-gray-200 rounded-xl px-6 py-4 mb-6 shadow-sm ">
-                <h1 className="text-2xl font-semibold text-gray-800 !m-0 !mb-2 uppercase">
-                    Categories & Master Data
+           <div className="bg-gray-200 rounded-xl px-6 py-4 mb-6 shadow-sm">
+            <div className="flex items-center justify-between">
+                <div>
+                <h1 className="text-2xl font-semibold text-gray-800 !m-0 uppercase">
+                    Sub Categories & Master Data
                 </h1>
-                <p className="text-2sm text-gray-500 !m-0">
-                    Manage global categories for the platform
+                <p className="text-sm text-gray-500 !m-0 mt-1">
+                    Manage global Sub categories for the platform
                 </p>
+                </div>
+
+                <Button
+                icon={<ArrowLeftOutlined  />}
+                size="large"
+                className="uppercase font-bold"
+                onClick={() => navigate(-1)}
+                >
+                Back
+                </Button>
+
+            </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm p-4">
@@ -211,19 +224,19 @@ export default function Category(){
                     icon={<PlusOutlined />}
                     size="large"
                     className="uppercase font-bold"
-                   onClick={() => {
-                    setIsModalOpen(true);
-                    setEditingId(null);
-                    
-                    form.resetFields();
+                    onClick={() =>  {
+                        setIsModalOpen(true);
+                        setEditingId(null);
+                        
+                        form.resetFields();
                     }}
-                    >Add Category</Button>
+                    >Add SubCategory</Button>
                 </div>
                 <Table
                 columns={columns}
                 dataSource={categories}
-                loading={loading}
                 rowClassName={() => "text-lg"}
+                loading={loading}
                 pagination={{ pageSize: 5 }}
                 />
             </div>
@@ -231,36 +244,27 @@ export default function Category(){
             <Modal
                 title = {
                     <div className="text-center text-lg font-semibold !mt-5 !m-5">
-                    {editingId ? "EDIT CATEGORY" : "ADD NEW CATEGORY"}
+                    {editingId ? "EDIT SUB-CATEGORY" : "ADD NEW SUB-CATEGORY"}
                     </div>
                 }
-                open={isModalOpen}
+
+                open = {isModalOpen}
                 onCancel={() => {
-                setIsModalOpen(false);
-                setEditingId(null);
-                
-                form.resetFields();
+                    setIsModalOpen(false);
+                    setEditingId(null);
+                    form.resetFields();
                 }}
                 destroyOnHidden
                 footer={null}
             >
             <Form form={form} layout="vertical" onFinish={onFinish} className="space-y-5">
                 <Form.Item 
-                    label = {<span className="text-gray-700 font-semibold text-lg ">Enter a category name</span>}
+                    label = {<span className="text-gray-700 font-semibold text-lg ">Enter a subcategory name</span>}
                     name = "name"
                     rules = {[{required : true ,message: "Enter Category name"}]}
                 >
                 <Input placeholder="e.g : Fashion" className="h-10 rounded-lg bg-gray-100 border-gray-300 focus:bg-white"/>
                 </Form.Item>
-
-                {/* <Form.Item
-                    label={<span className="text-gray-700 font-semibold text-lg ">Enter a sub category name</span>}
-                    name="subCategories"
-                    rules={[{ required: true, message: "Enter sub categories" }]}
-                >
-                    <Input placeholder="Men, Women, Kids" className="h-10 rounded-lg bg-gray-100 border-gray-300 focus:bg-white"/>
-                </Form.Item> */}
-
                 <Form.Item
                     label={
                         <span className="text-gray-700 font-semibold text-lg">
@@ -286,7 +290,9 @@ export default function Category(){
                         Cancel
                         </Button>
                         <Button type="primary" htmlType="submit" className="text-base font-semibold h-10 px-6">
-                        {editingId ? "UPDATE CATEGORY" : "SAVE CATEGORY"}
+                        {editingId ? "UPDATE SUB-CATEGORY" : "SAVE SUB-CATEGORY"}
+                        
+                         
                         </Button>
                     </Space>
                 </Form.Item>

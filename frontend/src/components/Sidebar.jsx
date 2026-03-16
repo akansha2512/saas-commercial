@@ -1,8 +1,15 @@
 import {ShoppingCartOutlined,DashboardOutlined,ShopOutlined,AppstoreOutlined,DollarOutlined,TeamOutlined,SettingOutlined,SafetyOutlined,FileTextOutlined,BellOutlined,TagsOutlined } from "@ant-design/icons";
 import { NavLink } from "react-router-dom";
-
+import { useAuth } from "../context/AuthContext";
+import { useParams } from "react-router-dom";
 export default function Sidebar() {
-  const user = JSON.parse(localStorage.getItem("user"));
+  // const user = JSON.parse(localStorage.getItem("user"));
+  const { user } = useAuth();
+  const { slug } = useParams();
+   if (!user) {
+    return null; // user login nahi hai to redirect
+  }
+  const role = user?.role;
   return (
     <aside className="fixed left-0 top-0 w-80 min-h-screen bg-[linear-gradient(110.7deg,_rgba(15,33,43,1)_1.2%,_rgba(74,123,157,1)_88.2%)]  text-white flex flex-col z-40">
 
@@ -12,7 +19,7 @@ export default function Sidebar() {
 
      
       <nav className="flex-1 px-6 py-10  space-y-5 text-base font-medium ">
-      {user.role === "super_admin" && (
+      {role === "super_admin" && (
         
         <>
           <SidebarItem
@@ -76,48 +83,52 @@ export default function Sidebar() {
       )}
 
 
-      {user.role === "admin" && (
+      {role === "admin" && (
         <>
            <SidebarItem
           icon={<DashboardOutlined />}
           label="Dashboard"
-          to="/dashboard"
+           to={`/merchant/${slug}/dashboard`}
         />
 
         <SidebarItem
           icon={<AppstoreOutlined />}
           label="Products"
-          to="/products"
+          
+           to={`/merchant/${slug}/products`}
         />
 
         <SidebarItem
           icon={<ShoppingCartOutlined />}
           label="Orders"
-          to="/orders"
+         
+           to={`/merchant/${slug}/orders`}
         />
 
         <SidebarItem
           icon={<TeamOutlined />}
           label="Customers"
-          to="/customers"
+          
+           to={`/merchant/${slug}/customers`}
         />
 
         <SidebarItem
           icon={<DollarOutlined />}
           label="Payments"
-          to="/payments"
+          
+           to={`/merchant/${slug}/payments`}
         />
 
-        <SidebarItem
+        {/* <SidebarItem
           icon={<SettingOutlined />}
           label="Settings"
           to="/settings"
-        />
+        /> */}
         </>
       )}
       </nav>
       <div className="px-6 py-4 text-xl flex itmes-center justify-center text-gray-400 border-t border-white/10">
-        {user.role === "super_admin" ? "SuperAdmin Panel" : "Merchant Panel"}
+        {user?.role === "super_admin" ? "SuperAdmin Panel" : "Merchant Panel"}
       </div>
 
     </aside>
