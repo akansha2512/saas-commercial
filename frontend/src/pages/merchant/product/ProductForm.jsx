@@ -1,15 +1,106 @@
-import { Form, Input, InputNumber,Select, Upload,Button  } from "antd";
+import { Form, Input, InputNumber,Select, Upload,Button,message  } from "antd";
 import {PlusOutlined} from "@ant-design/icons"
 import { useNavigate } from "react-router-dom";
-const normFile = (e) => {
-  if (Array.isArray(e)) {
-    return e;
-  }
-  return e?.fileList;
-};
+import { useState,useEffect } from "react";
+import axios from "axios";
+import { useParams } from "react-router-dom";
 
 export default function ProductForm(){
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+  const [form] = Form.useForm();
+  const[loading, setLoading] = useState(false);
+  const[categories,setCategories] = useState([]);
+  const[subCategories,setsubCategories] = useState([]);
+  const { slug } = useParams();
+  useEffect(() => {
+    fetchCategory();
+  },[]);
+  // Yaha problem ye hai ki Upload component event object bhejta hai, value nahi.
+  const normFile = (e) => {
+    if(Array.isArray(e)){
+      return e;
+    }
+    return e?.fileList;
+  }
+  const fetchCategory = async() => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`http://localhost:5000/api/merchant/${slug}/category`,{
+        headers:{
+                    Authorization:`Bearer ${token}`
+                },
+      }
+    );
+    setCategories(res.data.data);
+   
+    console.log(res.data.data);
+    } catch (error) {
+      message.error("failed to fetch");
+    }
+    finally{
+      setLoading(false);
+    }
+  }
+
+  const handleSubCategory = async(value)=>{
+    setLoading(true);
+    try {
+      const res = await axios.get(`http://localhost:5000/api/merchant/${slug}/subCategory/${value}`,{
+                 headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+        }
+    );
+    setsubCategories(res.data.data);
+    console.log(res.data);
+    } catch (error) {
+       message.error("failed to fetch");
+    }
+    finally{
+      setLoading(false);
+    }
+  }
+
+  const onFinish = async (values) => {
+
+    try {
+      const formData = new FormData();
+      formData.append("name", values.name)
+      formData.append("category_id", values.category_id);
+      formData.append("sub_category_id", values.sub_category_id);
+      formData.append("price", values.price);
+      formData.append("compare_price", values.compare_price);
+      formData.append("stock", values.stock);
+      formData.append("sku", values.sku);
+      formData.append("status", values.status);
+      formData.append("description", values.description);
+
+      if (values.image && values.image.length > 0) {
+        formData.append("image", values.image[0].originFileObj);
+      }
+
+      const res = await axios.post(
+      `http://localhost:5000/api/merchant/${slug}/product`,
+      formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      message.success("Product created successfully");
+     navigate(`/merchant/${slug}/products`);
+
+     
+    } catch (error) {
+      console.log(error);
+      message.error("Failed to create product");
+    }
+
+    
+  }
   return (
     
     <div className="p-6 ">
@@ -17,7 +108,7 @@ export default function ProductForm(){
           <h1 className="text-2xl font-semibold text-gray-800 text-center m-5 uppercase border-b-2 border-gray-300 pb-5">Add Product</h1>
 
       
-        <Form  layout="vertical">
+        <Form  form={form} layout="vertical" onFinish={onFinish}>
           <div className="grid grid-cols-2 gap-10 px-[50px]">
             <Form.Item 
                     label = {<span className="text-gray-700 font-semibold text-lg uppercase">Name</span>}
@@ -30,70 +121,108 @@ export default function ProductForm(){
             
             <Form.Item
                     label={<span className="text-gray-700 font-semibold text-lg uppercase">Category</span>}
-                    name="subCategories"
+                    name="category_id"
                     rules={[{ required: true, message: "Enter categories" }]}
                 >
                     {/* <InputNumber placeholder="Men, Women, Kids" className="h-10 rounded-lg bg-gray-100 border-gray-300 focus:bg-white"/> */}
                     <Select
+                        loading={loading}
                         placeholder="Select Category"  
                         className="h-10 rounded-lg bg-gray-100 border-gray-300 focus:bg-white"
-                    
+                        onChange={handleSubCategory}
 
-                      options={[
-                        { label: "Fashion", value: "fashion" },
-                        { label: "Electronics", value: "electronics" },
-                      ]}
+                        options={categories.map((cat) => ({
+                        label:cat.name,
+                        value:cat.id,
+                      }))}
                     />
             </Form.Item>
             <Form.Item
                     label={<span className="text-gray-700 font-semibold text-lg uppercase">Sub Category</span>}
-                    name="subCategories"
+                    name="sub_category_id"
                     rules={[{ required: true, message: "Enter sub categories" }]}
                 >
                     {/* <InputNumber placeholder="Men, Women, Kids" className="h-10 rounded-lg bg-gray-100 border-gray-300 focus:bg-white"/> */}
                     <Select
                         placeholder="Select product sub category"  
                         className="h-10 rounded-lg bg-gray-100 border-gray-300 focus:bg-white"
-
-                        options={[
-                        { label: "Fashion", value: "fashion" },
-                        { label: "Electronics", value: "electronics" },
-                      ]}
+                        loading={loading}
+                        options={subCategories.map((sub) => ({
+                          label: sub.name,
+                          value: sub.id,
+                        }))}
                     />
             </Form.Item>
 
             <Form.Item
                     label={<span className="text-gray-700 font-semibold text-lg uppercase">Price</span>}
-                    name="subCategories"
+                    name="price"
                     rules={[{ required: true, message: "Enter product price" }]}
                 >
                     <InputNumber placeholder="Please enter product price" className="h-10 !w-full rounded-lg bg-gray-100 border-gray-300 focus:bg-white"/>
             </Form.Item>
             <Form.Item
                     label={<span className="text-gray-700 font-semibold text-lg uppercase">Stock</span>}
-                    name="subCategories"
+                    name="stock"
                     rules={[{ required: true, message: "Please enter stock quantity" }]}
                 >
                     <InputNumber placeholder="Enter available stock" className="h-10 !w-full rounded-lg bg-gray-100 border-gray-300 focus:bg-white"/>
             </Form.Item>
-            
-
-            <Form.Item  label={<span className="text-gray-700 font-semibold text-lg uppercase">Upload</span>} valuePropName="fileList" getValueFromEvent={normFile}>
-              <Upload action="" listType="picture-card">
-                <button
-                  style={{ color: 'inherit', cursor: 'inherit', border: 0, background: 'none' }}
-                  type="button"
+            <Form.Item
+                label={<span className="text-gray-700 font-semibold text-lg uppercase">Upload</span>}
+                name="image"
+                valuePropName="fileList"
+                getValueFromEvent={normFile}
+              >
+                <Upload
+                  name="file"
+                  beforeUpload={() => false}   
+                  maxCount={1}
                 >
-                  <PlusOutlined />
-                  <div >Upload</div>
-                </button>
-              </Upload>
+                  <Button
+                  type="default"
+                size="large"
+                icon={<PlusOutlined />}
+                className="h-10 !w-full rounded-lg bg-gray-100 border-gray-300 focus:bg-white">
+                    Click to Upload
+                  </Button>
+                </Upload>
             </Form.Item>
 
+            <Form.Item 
+            label = {<span className="text-gray-700 font-semibold text-lg uppercase">SKU (Stock keep unit)</span>}
+            name="sku"
+            rules={[{required:true,message:"Enter sku"}]}
+            >
+              <Input placeholder="e.g : Enter SKU code" className="h-10 rounded-lg bg-gray-100 border-gray-300 focus:bg-white"/>
+            </Form.Item>
+
+            <Form.Item 
+            label = {<span className="text-gray-700 font-semibold text-lg uppercase">Compare Price</span>}
+            name="compare_price"
+            rules={[{required:true,message:"Enter compare price"}]}
+            >
+              <InputNumber placeholder="e.g : Enter compare price" className="h-10 !w-full rounded-lg bg-gray-100 border-gray-300 focus:bg-white"/>
+            </Form.Item>
+            
+            <Form.Item
+              label={<span className="text-gray-700 font-semibold text-lg uppercase">Status</span>}
+              name="status"
+              initialValue="active"
+              rules={[{ required: true, message: "Select status" }]}
+            >
+              <Select
+                className="h-10 rounded-lg bg-gray-100 border-gray-300 test-lg"
+                options={[
+                  { label: "Active", value: "active" },
+                  { label: "Inactive", value: "inactive" },
+                ]}
+              />
+            </Form.Item>
             <Form.Item
                      className="col-span-2"
                     label={<span className="text-gray-700 font-semibold text-lg uppercase">Description</span>}
-                    name="subCategories"
+                    name="description"
                     rules={[{ required: true, message: "Enter sub categories" }]}
                 >
                     <Input.TextArea  rows={4} placeholder="Men, Women, Kids" className="h-10  rounded-lg bg-gray-100 border-gray-300 focus:bg-white"/>
@@ -109,7 +238,7 @@ export default function ProductForm(){
               <Button
                 size="large"
                     className="uppercase font-bold"
-                onClick={() => navigate("/products")}
+                onClick={() => navigate(`/merchant/${slug}/products`)}
               >
                 Cancel
               </Button>

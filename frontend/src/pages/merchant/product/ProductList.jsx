@@ -2,8 +2,10 @@ import { Table, Tag, Button, Space, Input} from "antd";
 import {PlusOutlined, CheckCircleOutlined, EyeOutlined, StopOutlined} from "@ant-design/icons"
 const {Search} = Input;
 import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 export default function ProductList(){
      const navigate = useNavigate();
+     const { slug } = useParams();
     const data = [
         {
         id: 1,
@@ -58,7 +60,7 @@ export default function ProductList(){
             dataIndex: "status",
             key: "status",
             render: (status) => (
-                <Tag color={status === "Active" ? "green" : "red"} className="text-base font-medium">
+                <Tag color={status === "Active" ? "green" : "red"} className="text-lg font-medium">
                 {status}
                 </Tag>
             ),
@@ -71,18 +73,18 @@ export default function ProductList(){
                 <Button
                     type="primary"
                     icon={<CheckCircleOutlined />}
-                    size="medium"
+                    size="large"
                     className="uppercase font-bold"
                 >
                     Edit
                 </Button>
 
-                <Button danger icon={<StopOutlined />} size="medium"
+                <Button danger icon={<StopOutlined />} size="large"
                         className="uppercase font-bold">
                     Delete
                 </Button>
 
-                <Button icon={<EyeOutlined />}size="medium"
+                <Button icon={<EyeOutlined />}size="large"
                         className="uppercase font-bold">View</Button>
                 </Space>
             ),
@@ -113,14 +115,14 @@ export default function ProductList(){
                     icon={<PlusOutlined />}
                     size="large"
                     className="uppercase font-bold"
-                    onClick={() => navigate("/products/add")}
+                    onClick={() => navigate(`/merchant/${slug}/products/add`)}
                 >Add Product</Button>                           
             </div>  
             <Table
             columns={columns}
             dataSource={data}
             pagination={{ pageSize: 5 }}
-            rowClassName={() => "text-base"}
+            rowClassName={() => "text-lg"}
             />
       </div>
     </div>

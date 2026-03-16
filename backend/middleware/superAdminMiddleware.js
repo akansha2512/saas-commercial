@@ -3,4 +3,5 @@ exports.superAdminMiddleware = (req, res, next) => {
         return res.status(403).json({message:"Access Denied"});
     }
     next();
+    console.log("ROLE IN MIDDLEWARE:", req.user.role);
 }

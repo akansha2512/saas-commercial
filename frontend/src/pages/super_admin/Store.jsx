@@ -56,7 +56,7 @@ export default function Store(){
         {
             title:(
                 <span className="text-xl font-semibold text-black uppercase">
-                Products
+                Orders
                 </span>
             ),
                 dataIndex: "orders",

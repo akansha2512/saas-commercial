@@ -5,8 +5,8 @@ import {
   AppstoreOutlined,
   ClockCircleOutlined,
 } from "@ant-design/icons";
-
 const {Search} = Input;
+
 export default function MerchantDashboard() {
 
   // 🔹 Dummy Summary Data (API se aayega future me)
@@ -18,6 +18,7 @@ export default function MerchantDashboard() {
 //   };
 
   // 🔹 Recent Orders Dummy Data
+   
   const data = [
     {
       key: "1",
