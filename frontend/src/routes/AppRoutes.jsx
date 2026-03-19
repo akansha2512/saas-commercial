@@ -3,6 +3,8 @@ import { useAuth } from "../context/AuthContext";
 
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import CreateStore from "../pages/auth/Store";
+import SelectStore from "../pages/auth/SelectStore";
 import AuthLayout from "../layouts/AuthLayout";
 import DashboardLayout from "../layouts/DashboardLayout";
 
@@ -17,6 +19,7 @@ import Payment from "../pages/super_admin/payment/Payments";
 import SubCategory from "../pages/super_admin/SubCategory";
 
 // Merchant Pages
+
 import Dashboard from "../pages/merchant/Dashboard";
 import ProductList from "../pages/merchant/product/ProductList";
 import ProductForm from "../pages/merchant/product/ProductForm";
@@ -111,6 +114,22 @@ export default function AppRoutes() {
     },
 
     // MERCHANT ROUTES
+    {
+      path: "/create-store",
+      element: (
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <CreateStore />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/select-store",
+      element: (
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <SelectStore />
+        </ProtectedRoute>
+      ),
+    },
     {
       path: "/merchant/:slug",
       element: (
