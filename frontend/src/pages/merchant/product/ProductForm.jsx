@@ -12,9 +12,14 @@ export default function ProductForm(){
   const[loading, setLoading] = useState(false);
   const[categories,setCategories] = useState([]);
   const[subCategories,setsubCategories] = useState([]);
-  const { slug } = useParams();
+
+  const {slug, id} = useParams();
+  const edit = !!id;
   useEffect(() => {
     fetchCategory();
+    if(edit){
+      fetchSingleProduct();
+    }
   },[]);
   // Yaha problem ye hai ki Upload component event object bhejta hai, value nahi.
   const normFile = (e) => {
@@ -65,6 +70,7 @@ export default function ProductForm(){
   const onFinish = async (values) => {
 
     try {
+      
       const formData = new FormData();
       formData.append("name", values.name)
       formData.append("category_id", values.category_id);
@@ -80,18 +86,32 @@ export default function ProductForm(){
         formData.append("image", values.image[0].originFileObj);
       }
 
-      const res = await axios.post(
-      `http://localhost:5000/api/merchant/${slug}/product`,
-      formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      message.success("Product created successfully");
-     navigate(`/merchant/${slug}/products`);
+      if(edit){
+        await axios.put(`http://localhost:5000/api/merchant/${slug}/update-product/${id}`,
+          formData,
+          {
+            headers:{
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            }
+          }
+        );
+          message.success("Product created successfully");
+          navigate(`/merchant/${slug}/products`);
+      }else{
+        await axios.post(
+        `http://localhost:5000/api/merchant/${slug}/product`,
+          formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+          message.success("Product created successfully");
+          navigate(`/merchant/${slug}/products`);
+      }
 
      
     } catch (error) {
@@ -101,6 +121,49 @@ export default function ProductForm(){
 
     
   }
+
+  const fetchSingleProduct = async () => {
+  try {
+    const res = await axios.get(
+      `http://localhost:5000/api/merchant/${slug}/product/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = res.data.data;
+
+    form.setFieldsValue({
+      name: data.name,
+      category_id: data.category_id,
+      sub_category_id: data.sub_category_id,
+      price: data.price,
+      compare_price: data.compare_price,
+      stock: data.stock,
+      sku: data.sku,
+      status: data.status,
+      description: data.description,
+      image: data.image
+      ? [
+          {
+            uid: "-1",
+            name: data.image,
+            status: "done",
+            url: `http://localhost:5000/uploads/products/${data.image}`,
+          },
+        ]
+      : [],
+    });
+
+    //  load subcategory also
+    handleSubCategory(data.category_id);
+
+  } catch (error) {
+    message.error("Failed to load product");
+  }
+};
   return (
     
     <div className="p-6 ">
@@ -176,8 +239,10 @@ export default function ProductForm(){
               >
                 <Upload
                   name="file"
-                  beforeUpload={() => false}   
+                  beforeUpload={() => false}
                   maxCount={1}
+                  accept="image/png,image/jpeg,image/webp"
+                  
                 >
                   <Button
                   type="default"

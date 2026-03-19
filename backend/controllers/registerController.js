@@ -29,30 +29,30 @@ exports.register= async (req, res) => {
 
         //Insert User (role = admin, status = pending)
         const [userResult] = await connection.query(
-            `INSERT INTO users (name, email, phone, password, role, status) 
-             VALUES (?, ?, ?, ?, 'admin', 'pending')`,
+            `INSERT INTO users (name, email, phone,     password, role, status) 
+             VALUES (?, ?, ?, ?, 'admin', 'active')`,
             [name, email, phone, hashedPassword]
         );
 
-        const userId = userResult.insertId;
+        // const userId = userResult.insertId;
 
         // Generate Slug Automatically
-        const slug = storeName
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/(^-|-$)/g, "");
+        // const slug = storeName
+        //     .toLowerCase()
+        //     .replace(/[^a-z0-9]+/g, "-")
+        //     .replace(/(^-|-$)/g, "");
 
-        //  Insert Store (inactive by default)
-        const[storeResult] = await connection.query(
-            `INSERT INTO stores (name, slug, status) 
-             VALUES (?, ?, 'inactive')`,
-            [storeName, slug]
-        );
+        // //  Insert Store (inactive by default)
+        // const[storeResult] = await connection.query(
+        //     `INSERT INTO stores (name, slug, status) 
+        //      VALUES (?, ?, 'inactive')`,
+        //     [storeName, slug]
+        // );
 
-        const storeId = storeResult.insertId;
-        await connection.query(
-            `insert into stores_users(user_id, store_id) values(?,?)`,[userId, storeId]
-        );
+        // const storeId = storeResult.insertId;
+        // await connection.query(
+        //     `insert into stores_users(user_id, store_id) values(?,?)`,[userId, storeId]
+        // );
 
         await connection.commit();
 

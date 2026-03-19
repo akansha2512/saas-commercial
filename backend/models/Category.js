@@ -17,8 +17,11 @@ class Category{
 
     static async getList(){
         const[result] = await db.execute(
-            ` SELECT  c.*, COUNT(sc.id) AS total_subcategories FROM categories c JOIN sub_categories sc 
-            ON sc.category_id = c.id AND sc.deleted_at IS NULL AND sc.status = 'active' WHERE c.deleted_at IS NULL GROUP BY c.id ORDER BY c.id DESC`
+            // ` SELECT  c.*, COUNT(sc.id) AS total_subcategories FROM categories c JOIN sub_categories sc 
+            // ON sc.category_id = c.id AND sc.deleted_at IS NULL AND sc.status = 'active' WHERE c.deleted_at IS NULL GROUP BY c.id ORDER BY c.id DESC`
+
+             ` SELECT  c.*, COUNT(sc.id) AS total_subcategories FROM categories c JOIN sub_categories sc 
+            ON sc.category_id = c.id AND sc.deleted_at IS NULL WHERE c.deleted_at IS NULL GROUP BY c.id ORDER BY c.id DESC`
         );
         return result;
     }

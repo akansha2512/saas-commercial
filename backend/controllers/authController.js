@@ -49,7 +49,7 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-    console.log("token", token);
+    // console.log("token", token);
     const [stores] = await db.query(
       `select s.id, s.name, s.slug from stores_users su join stores s on su.store_id = s.id where su.user_id = ?`,[user.id]
     );

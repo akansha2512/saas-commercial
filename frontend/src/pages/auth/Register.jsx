@@ -16,7 +16,7 @@ export default function Register() {
               email: values.email,
               phone:values.phone,
               password: values.password,
-              storeName: values.store_name
+              // storeName: values.store_name
             }
           );
 
@@ -61,7 +61,7 @@ export default function Register() {
             </Title>
 
             <Text className="text-gray-500 mb-8 text-base">
-              Fill in your store details to get started
+              Register your account to start using the platform
             </Text>
 
             <Form
@@ -69,8 +69,8 @@ export default function Register() {
               onFinish={onFinish}
               className="space-y-4"
             >
-             <div className="grid grid-cols-2 gap-8">
-                 <Form.Item
+             <div className="grid grid-cols-2 gap-5">
+              <Form.Item
                 label={<span className="text-gray-700 font-semibold text-base">Full Name</span>}
                 name="name"
                 rules={[{ required: true, message: "Please enter name" }]}
@@ -81,7 +81,7 @@ export default function Register() {
                 />
               </Form.Item>
 
-              <Form.Item
+              {/* <Form.Item
                 label={<span className="text-gray-700 font-semibold text-base">Store Name</span>}
                 name="store_name"
                 rules={[{ required: true, message: "Please enter store name" }]}
@@ -90,7 +90,7 @@ export default function Register() {
                   placeholder="Enter store name"
                   className="h-12 rounded-lg bg-gray-100"
                 />
-              </Form.Item>
+              </Form.Item> */}
 
               <Form.Item
                 label={<span className="text-gray-700 font-semibold text-base">Email</span>}

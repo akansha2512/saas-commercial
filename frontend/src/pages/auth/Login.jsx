@@ -74,14 +74,30 @@ export default function Login() {
                       return;
                     }
 
-                    if(stores.length===0){
-                      // navigate("create/store")
-                    }else if(stores.length === 1){
-                        localStorage.setItem("activeStoreId", stores[0].id);
-                        navigate(`/merchant/${stores[0].slug}/dashboard`);
+                    // if(stores.length===0){
+                    //   navigate("/create-store")
+                    // }else if(stores.length === 1){
+                    //     localStorage.setItem("activeStoreId", stores[0].id);
+                    //     navigate(`/merchant/${stores[0].slug}/dashboard`);
+                    // }
+                    // else{
+                    //   // navigate("/select-store");
+                    // }
+
+                    if (stores.length === 0) {
+                      navigate("/create-store");
                     }
-                    else{
-                      // navigate("/select-store");
+                    else if (stores.length === 1) {
+
+                      if (stores[0].status === "active") {
+                        navigate(`/merchant/${stores[0].slug}/dashboard`);
+                      } else {
+                        navigate("/select-store"); // show pending UI
+                      }
+
+                    }
+                    else {
+                      navigate("/select-store"); // multiple stores
                     }
                     console.log(res.data);
 

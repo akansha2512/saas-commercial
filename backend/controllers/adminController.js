@@ -1,7 +1,8 @@
 const db = require("../config/db");
 exports.getPendingStores = async(req, res) => {
     try {
-        const[stores] = await db.query(`select s.id, s.name, s.status, u.name as owner_name, u.email from stores s join stores_users su on s.id = su.store_id join users u on su.user_id = u.id where s.status = 'inactive' and u.role = 'admin' `);
+        const[stores] = await db.query(` SELECT s.id, s.name, s.status, 
+           u.name AS owner_name, u.email FROM stores s LEFT JOIN stores_users su ON s.id = su.store_id LEFT JOIN users u ON su.user_id = u.id WHERE s.status = 'inactive'`);
         res.json(stores)
     } catch (error) {
         res.status(500).json({message:error.message}) //500 = server error
@@ -14,13 +15,14 @@ exports.approveStore = async(req,res) => {
     // try block + transaction start
     try {
         await connection.beginTransaction();
-        const[stores] = await connection.query(`select su.user_id from stores_users su where su.store_id = ?`, [id]);
+        const[stores] = await connection.query(`select id from stores where id = ?`,
+            [id]);
         if(stores.length === 0){
             return res.status(404).json({message:"store not found"})
         }
-        const ownerId = stores[0].user_id;
+       
         await connection.query("update stores set status = 'active' where id=?",[id]);
-        await connection.query("update users set status='active' where id=?", [ownerId]);
+        // await connection.query("update users set status='active' where id=?", [ownerId]);
         await connection.commit();
         res.json({message: "Stores approved successfully"})
     } catch (error) {
@@ -39,13 +41,13 @@ exports.rejectStore = async(req,res) => {
     const connection = await db.getConnection();
     try {
        await connection.beginTransaction();
-       const [stores] =await connection.query(`select su.user_id from stores_users su where su.store_id=?`, [id]);
+       const [stores] =await connection.query(`select id from stores where id=?`, [id]);
        if(stores.length === 0){
         return res.status(404).json({message:"store not found"});
        }
-       const ownerId = stores[0].user_id;
+       
        await connection.query("update stores set status = 'disabled' where id=?",[id]);
-       await connection.query("update users set status = 'blocked' where id=?", [ownerId]);
+       
        await connection.commit();
        res.json({message:"Stores rejected successfully"});
     } catch (error) {
